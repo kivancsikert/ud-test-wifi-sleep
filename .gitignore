@@ -4,3 +4,4 @@ dependencies.lock
 .vscode/
 sdkconfig
 sdkconfig.old
+sdkconfig.local.defaults

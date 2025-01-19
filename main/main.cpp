@@ -13,6 +13,12 @@
 #include <esp_wifi.h>
 #include <nvs_flash.h>
 
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include "lwip/netdb.h"
+#include "lwip/dns.h"
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #include <freertos/task.h>
@@ -56,6 +62,8 @@ static void event_handler(void* arg, esp_event_base_t eventBase, int32_t eventId
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
         retryNum = 0;
         xEventGroupSetBits(wifiEventGroup, WIFI_CONNECTED_BIT);
+    } else {
+        ESP_LOGI(TAG, "wifi event: %ld", eventId);
     }
 }
 
@@ -173,9 +181,15 @@ extern "C" void app_main() {
 
     esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "no-sleep", &noSleep);
 
+    // esp_sleep_enable_wifi_wakeup();
+    // esp_sleep_enable_wifi_beacon_wakeup();
+
+    ESP_LOGI(TAG, "Connecting...");
     connectWifi();
+    ESP_LOGI(TAG, "Connected");
 
     auto startTime = high_resolution_clock::now();
+    auto lastPing = startTime;
     while (true) {
         vTaskDelay(2000 / portTICK_PERIOD_MS);
         auto endTime = high_resolution_clock::now();
@@ -186,5 +200,21 @@ extern "C" void app_main() {
             wifiStatus(xEventGroupGetBits(wifiEventGroup)));
         fflush(stdout);
         startTime = endTime;
+
+        // if (endTime - lastPing > seconds(5)) {
+        //     ESP_LOGI(TAG, "Pinging...");
+        //     const struct addrinfo hints = {
+        //         .ai_family = AF_INET,
+        //         .ai_socktype = SOCK_STREAM,
+        //     };
+        //     struct addrinfo* res;
+        //     struct in_addr* addr;
+        //     int s, r;
+        //     char recv_buf[64];
+
+        //     while (1) {
+        //         int err = getaddrinfo("444.hu", WEB_PORT, &hints, &res);
+        //     }
+        // }
     }
 }
