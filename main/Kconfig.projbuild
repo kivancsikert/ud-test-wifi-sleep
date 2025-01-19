@@ -10,4 +10,9 @@ menu "Example Configuration"
         help
             WiFi password (WPA or WPA2) for the example to use.
 
+    config ESP_MQTT_BROKER_URI
+        string "MQTT Broker URI"
+        help
+            The URI of the MQTT server.
+
 endmenu

@@ -7,8 +7,9 @@ A simple test project to figure out the most efficient mode to stay connected to
 Create an `sdkconfig.local.defaults` with:
 
 ```properties
-CONFIG_ESP_WIFI_SSID="SSID"
-CONFIG_ESP_WIFI_PASSWORD="PASSWORD"
+CONFIG_ESP_WIFI_SSID="..."
+CONFIG_ESP_WIFI_PASSWORD="..."
+CONFIG_ESP_MQTT_BROKER_URI="mqtt://..."
 ```
 
 Then run:
