@@ -13,11 +13,11 @@
 #include <esp_wifi.h>
 #include <nvs_flash.h>
 
+#include "lwip/dns.h"
 #include "lwip/err.h"
+#include "lwip/netdb.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
-#include "lwip/netdb.h"
-#include "lwip/dns.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
@@ -78,6 +78,10 @@ void connectWifi() {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
+    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MAX_MODEM));
+    esp_sleep_enable_wifi_wakeup();
+    esp_sleep_enable_wifi_beacon_wakeup();
+
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
@@ -95,6 +99,7 @@ void connectWifi() {
         .sta = {
             .ssid = CONFIG_ESP_WIFI_SSID,
             .password = CONFIG_ESP_WIFI_PASSWORD,
+            .listen_interval = 50,
             .threshold = {
                 .authmode = WIFI_AUTH_WPA2_PSK,
             },
@@ -181,9 +186,6 @@ extern "C" void app_main() {
 
     esp_pm_lock_create(ESP_PM_NO_LIGHT_SLEEP, 0, "no-sleep", &noSleep);
 
-    // esp_sleep_enable_wifi_wakeup();
-    // esp_sleep_enable_wifi_beacon_wakeup();
-
     ESP_LOGI(TAG, "Connecting...");
     connectWifi();
     ESP_LOGI(TAG, "Connected");
@@ -192,14 +194,14 @@ extern "C" void app_main() {
     auto lastPing = startTime;
     while (true) {
         vTaskDelay(2000 / portTICK_PERIOD_MS);
-        auto endTime = high_resolution_clock::now();
-        auto delayDurationInUs = duration_cast<microseconds>(endTime - startTime).count();
-        ESP_LOGI(TAG, "Awake %.3f%% (%lu cycles), wifi %s",
-            (1.0 - ((double) sleepDurationInUs.exchange(0)) / ((double) delayDurationInUs)) * 100.0,
-            sleepCount.exchange(0),
-            wifiStatus(xEventGroupGetBits(wifiEventGroup)));
-        fflush(stdout);
-        startTime = endTime;
+        // auto endTime = high_resolution_clock::now();
+        // auto delayDurationInUs = duration_cast<microseconds>(endTime - startTime).count();
+        // ESP_LOGI(TAG, "Awake %.3f%% (%lu cycles), wifi %s",
+        //     (1.0 - ((double) sleepDurationInUs.exchange(0)) / ((double) delayDurationInUs)) * 100.0,
+        //     sleepCount.exchange(0),
+        //     wifiStatus(xEventGroupGetBits(wifiEventGroup)));
+        // fflush(stdout);
+        // startTime = endTime;
 
         // if (endTime - lastPing > seconds(5)) {
         //     ESP_LOGI(TAG, "Pinging...");
